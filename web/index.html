@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 虛擬助理 - 兩種模式</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 啟動介面 - Toyota 風格置中對話框 -->
+    <div id="startup-cover" class="cover-screen">
+        <div class="cover-content">
+            <div id="disclaimer-box">
+                <h2 style="text-align: center; margin-bottom: 2rem;">使用提醒與安全聲明</h2>
+                <div id="scroll-section" class="scrollable-content">
+                    <p style="font-size: 1.2em;">為保護您的權益，使用達輝 AI 虛擬助理所提供之服務前，請詳細閱讀以下說明：</p>
+                    <ol style="font-size: 1.2em;">
+                        <li>本服務由達輝科技股份有限公司所提供。</li>
+                    </ol>
+                    <p style="font-size: 1.2em;">點選「開始使用」即表示您已閱讀並同意上述內容。立即開始與AI虛擬助理互動，輕鬆獲取您的專屬服務體驗！</p>
+                </div>
+            </div>
+            <button id="start-button" class="ok-button-disabled">開始使用</button>
+        </div>
+    </div>
+
+    <div class="container" id="main-app">
+        <!-- 標題區域 -->
+        <header class="header">
+            <h1>達輝虛擬助理</h1>
+        </header>
+
+        <!-- 模式選擇和語音設定區域 -->
+        <div class="controls-container">
+            <!-- 模式選擇區域 -->
+            <div class="mode-selector">
+                <button id="mode-nexavatar" class="mode-btn">
+                    NexAvatar (TTS+動畫) + LLM
+                </button>
+                <button id="mode-mytts" class="mode-btn active">
+                    NexAvatar (動畫) + TTS + LLM
+                </button>
+            </div>
+
+            <!-- 語音設定區域 -->
+            <div class="voice-settings">
+                <div class="voice-selector">
+                    <label for="voice-select">語音選擇：</label>
+                    <select id="voice-select">
+                        <option value="zh-TW-HsiaoChenNeural">曉晨 (女聲)</option>
+                        <option value="zh-TW-YunJheNeural">雲哲 (男聲)</option>
+                        <option value="zh-TW-HsiaoYuNeural">曉雨 (女聲)</option>
+                        <option value="zh-CN-XiaoxiaoNeural">曉曉 (女聲)</option>
+                        <option value="zh-CN-YunxiNeural">雲希 (男聲)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要內容區域 -->
+        <div class="main-content">
+            <!-- 虛擬人物容器 -->
+            <div id="avatar-container" class="avatar-container">
+                <!-- 公司 Logo -->
+                <div class="company-logo">
+                    <img src="img/companytitle.png" alt="達輝科技" />
+                </div>
+                <!-- <div class="loading-text">
+                    <p>虛擬助理載入中...</p>
+                    <p>請稍候片刻</p>
+                </div> -->
+            </div>
+
+            <!-- 對話區域 -->
+            <div class="chat-container">
+                <div id="conversation" class="conversation">
+                    <!-- 歡迎訊息將由 JavaScript 動態添加 -->
+                </div>
+
+                <!-- 快速問題卡片 -->
+                <div class="quick-questions">
+                    <div class="question-cards">
+                        <button class="question-card" data-question="虛擬助理可以幫我解決什麼問題？">
+                            虛擬助理可以幫我解決什麼問題？
+                        </button>
+                        <button class="question-card" data-question="達輝的語音技術有什麼特色？">
+                            達輝的語音技術有什麼特色？
+                        </button>
+                        <button class="question-card" data-question="如何導入AI客服到我的企業？">
+                            如何導入AI客服到我的企業？
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 輸入區域 -->
+                <div class="input-section">
+                    <div class="input-container">
+                        <input type="text" id="user-input" placeholder="請輸入您的問題..." />
+                        <button id="send-btn">發送</button>
+                    </div>
+                    
+                    <!-- 狀態顯示 -->
+                    <div id="status" class="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/nexavatar_v1.7.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
