@@ -631,7 +631,7 @@ async function handleVoiceResponseWithSync(loadingMessage, text) {
             eventListenersAdded = true;
         }
         
-        // 設定超時保護，如果 5 秒內沒有語音開始，就直接顯示文字
+        // 設定超時保護，如果 15 秒內沒有語音開始，就直接顯示文字
         const timeoutId = setTimeout(() => {
             if (!hasTextShown && !isCompleted) {
                 hasTextShown = true;
@@ -644,7 +644,7 @@ async function handleVoiceResponseWithSync(loadingMessage, text) {
                 eventListenersAdded = false;
                 resolve();
             }
-        }, 5000);
+        }, 15000);
         
         // 開始語音處理
         handleVoiceResponse(text).then(() => {
@@ -901,7 +901,7 @@ function hideQuickQuestions() {
 
 // 顯示歡迎訊息
 function showWelcomeMessage() {
-    const welcomeText = "您好！我是達輝虛擬助理，請選擇對話模式並開始聊天！";
+    const welcomeText = "您好！我是創造智能科技的AI助理，專精於MarTech行銷科技解決方案，請選擇對話模式並開始探索AI的無限可能！";
     
     console.log('顯示歡迎訊息:', welcomeText);
     
@@ -969,7 +969,7 @@ function addEnableAudioButton() {
 
 // 播放歡迎訊息（有語音）
 async function playWelcomeMessage() {
-    const welcomeText = "您好！我是達輝虛擬助理，請選擇對話模式並開始聊天！";
+    const welcomeText = "您好！我是創造智能科技的AI助理，專精於MarTech行銷科技解決方案，請選擇對話模式並開始探索AI的無限可能！";
     
     console.log('播放歡迎訊息:', welcomeText);
     

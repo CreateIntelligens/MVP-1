@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 
 # 導入現有模組
-from prompts import get_chat_prompt, get_special_prompt, get_smart_prompt, get_enhanced_chat_prompt
+from prompts import get_chat_prompt
 from tts_service import generate_audio, set_voice
 from config import GEMMA_MODELS, TTS_VOICES, DEFAULT_SETTINGS
 
@@ -93,11 +93,11 @@ async def get_llm_response(user_input: str, model_name: str = None) -> str:
         if len(user_input) > 1000:
             return "輸入太長了，請縮短您的問題"
         
-        # 使用智能提示詞系統 - 自動判斷用戶意圖並選擇最適合的提示詞
-        logger.info(f"使用智能提示詞分析用戶意圖: {user_input[:30]}...")
-        full_prompt = get_smart_prompt(user_input)
+        # 使用創造智能科技的提示詞系統
+        logger.info(f"使用創造智能科技提示詞: {user_input[:30]}...")
+        full_prompt = get_chat_prompt(user_input)
         
-        logger.info("智能提示詞選擇完成，發送到 Gemini")
+        logger.info("提示詞生成完成，發送到 Gemini")
         
         # 使用指定的模型或預設模型
         selected_model = model_name or DEFAULT_SETTINGS["llm_model"]

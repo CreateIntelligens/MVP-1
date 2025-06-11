@@ -1,5 +1,13 @@
-ref*
-.cline*
+
+# 分析工具產生的檔案
+analysis/
+analysis/analysis_results/
+analysis/static/
+analysis/__pycache__/
+data-collector/
+
+reference/
+.clinerules/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
