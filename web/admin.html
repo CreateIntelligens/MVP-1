@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>序號管理系統 - 管理員介面</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 24px;
+        }
+
+        .logout-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #ff5252;
+        }
+
+        .login-form {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            margin: 50px auto;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .login-form h2 {
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-success {
+            background: #51cf66;
+        }
+
+        .btn-success:hover {
+            background: #40c057;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+        }
+
+        .btn-danger:hover {
+            background: #ff5252;
+        }
+
+        .btn-warning {
+            background: #ffd43b;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background: #ffcc02;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f1f3f4;
+            padding-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            background: #f8f9fa;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+            font-size: 14px;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-available {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-used {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-permanent {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .table {
+                font-size: 12px;
+            }
+            
+            .table th, .table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 登入表單 -->
+        <div v-if="!isLoggedIn" class="login-form">
+            <h2>管理員登入</h2>
+            <div class="form-group">
+                <label for="adminCode">管理員序號</label>
+                <input 
+                    type="password" 
+                    id="adminCode" 
+                    v-model="adminCode" 
+                    @keypress.enter="login"
+                    placeholder="請輸入管理員序號"
+                >
+            </div>
+            <div v-if="loginError" class="alert alert-error">
+                {{ loginError }}
+            </div>
+            <button @click="login" class="btn" :disabled="isLoggingIn">
+                {{ isLoggingIn ? '登入中...' : '登入' }}
+            </button>
+        </div>
+
+        <!-- 主介面 -->
+        <div v-if="isLoggedIn" class="container">
+            <!-- 標題列 -->
+            <div class="header">
+                <h1>序號管理系統</h1>
+                <button @click="logout" class="logout-btn">登出</button>
+            </div>
+
+            <!-- 統計卡片 -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">{{ nonAdminStats.total }}/10</div>
+                    <div class="stat-label">序號數量</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ nonAdminStats.available }}</div>
+                    <div class="stat-label">可用序號</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ nonAdminStats.used }}</div>
+                    <div class="stat-label">已使用</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ nonAdminStats.permanent }}</div>
+                    <div class="stat-label">永久序號</div>
+                </div>
+            </div>
+
+            <!-- 分頁標籤 -->
+            <div class="tabs">
+                <button 
+                    class="tab" 
+                    :class="{ active: activeTab === 'codes' }"
+                    @click="activeTab = 'codes'"
+                >
+                    序號管理
+                </button>
+                <button 
+                    class="tab" 
+                    :class="{ active: activeTab === 'logs' }"
+                    @click="activeTab = 'logs'"
+                >
+                    使用記錄
+                </button>
+            </div>
+
+            <!-- 序號管理分頁 -->
+            <div v-if="activeTab === 'codes'" class="card">
+                <h3>序號管理</h3>
+                
+                <!-- 操作按鈕 -->
+                <div style="margin-bottom: 15px;">
+                    <button @click="showCreateModal = true" class="btn btn-success">
+                        創建序號
+                    </button>
+                    <button @click="loadCodes" class="btn">
+                        重新整理
+                    </button>
+                </div>
+
+                <!-- 搜尋框 -->
+                <input 
+                    type="text" 
+                    v-model="codeSearch" 
+                    placeholder="搜尋序號..." 
+                    class="search-box"
+                >
+
+                <!-- 序號列表 -->
+                <div v-if="isLoadingCodes" class="loading">載入中...</div>
+                <table v-else class="table">
+                    <thead>
+                        <tr>
+                            <th>序號</th>
+                            <th>類型</th>
+                            <th>狀態</th>
+                            <th>描述</th>
+                            <th>創建時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="code in filteredCodes" :key="code.code">
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <strong>{{ code.code }}</strong>
+                                    <button 
+                                        @click="copyToClipboard(code.code)" 
+                                        class="btn"
+                                        style="font-size: 10px; padding: 4px 8px; background: #28a745; color: white;"
+                                        title="複製序號"
+                                    >
+                                        📋
+                                    </button>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge" :class="code.type === 'permanent' ? 'status-permanent' : 'status-available'">
+                                    {{ code.type === 'permanent' ? '永久' : '一次性' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge" :class="getStatusClass(code)">
+                                    {{ getStatusText(code) }}
+                                </span>
+                            </td>
+                            <td>{{ code.description || '-' }}</td>
+                            <td>{{ formatDate(code.created_at) }}</td>
+                            <td>
+                                <button 
+                                    v-if="code.type === 'one_time' && code.is_used" 
+                                    @click="resetCode(code.code)" 
+                                    class="btn btn-warning"
+                                    style="font-size: 12px; padding: 6px 12px;"
+                                >
+                                    重置
+                                </button>
+                                <button 
+                                    v-if="!isProtectedCode(code.code)"
+                                    @click="deleteCode(code.code)" 
+                                    class="btn btn-danger"
+                                    style="font-size: 12px; padding: 6px 12px;"
+                                >
+                                    刪除
+                                </button>
+                                <button 
+                                    @click="viewCodeDetails(code)" 
+                                    class="btn"
+                                    style="font-size: 12px; padding: 6px 12px;"
+                                >
+                                    詳情
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 使用記錄分頁 -->
+            <div v-if="activeTab === 'logs'" class="card">
+                <h3>使用記錄</h3>
+                
+                <!-- 操作按鈕 -->
+                <div style="margin-bottom: 15px;">
+                    <button @click="loadLogs" class="btn">重新整理</button>
+                    <button @click="exportLogs" class="btn btn-success" :disabled="logs.length === 0">
+                        導出記錄
+                    </button>
+                    <select v-model="selectedLogCode" @change="loadLogs" style="margin-left: 10px; padding: 8px;">
+                        <option value="">所有序號</option>
+                        <option v-for="code in codes" :key="code.code" :value="code.code">
+                            {{ code.code }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- 記錄列表 -->
+                <div v-if="isLoadingLogs" class="loading">載入中...</div>
+                <table v-else class="table">
+                    <thead>
+                        <tr>
+                            <th>時間</th>
+                            <th>序號</th>
+                            <th>品牌</th>
+                            <th>IP 地址</th>
+                            <th>用戶訊息</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="log in logs" :key="log.timestamp + log.session_id">
+                            <td>{{ formatDate(log.timestamp) }}</td>
+                            <td><strong>{{ log.access_code }}</strong></td>
+                            <td>{{ log.brand }}</td>
+                            <td>{{ log.ip_address }}</td>
+                            <td>{{ truncateText(log.user_message, 50) }}</td>
+                            <td>
+                                <button 
+                                    @click="viewLogDetails(log)" 
+                                    class="btn"
+                                    style="font-size: 12px; padding: 6px 12px;"
+                                >
+                                    詳情
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 創建序號模態框 -->
+        <div class="modal" :class="{ show: showCreateModal }">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>創建序號</h3>
+                    <button @click="showCreateModal = false" class="close">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>序號</label>
+                    <input type="text" v-model="newCode.code" placeholder="輸入自定義序號（留空則隨機生成）">
+                    <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
+                        💡 提示：有輸入就自定義，沒輸入就隨機生成
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label>類型</label>
+                    <select v-model="newCode.type">
+                        <option value="one_time">一次性</option>
+                        <option value="permanent">永久</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea v-model="newCode.description" placeholder="序號描述（可選）"></textarea>
+                </div>
+                <div v-if="createError" class="alert alert-error">{{ createError }}</div>
+                <div style="text-align: right;">
+                    <button @click="showCreateModal = false" class="btn" style="background: #6c757d;">取消</button>
+                    <button @click="createCode" class="btn btn-success" :disabled="isCreating">
+                        {{ isCreating ? '創建中...' : '創建' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 隨機生成模態框 -->
+        <div class="modal" :class="{ show: showGenerateModal }">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>隨機生成序號</h3>
+                    <button @click="showGenerateModal = false" class="close">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>類型</label>
+                    <select v-model="generateCode.type">
+                        <option value="one_time">一次性</option>
+                        <option value="permanent">永久</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea v-model="generateCode.description" placeholder="序號描述（可選）"></textarea>
+                </div>
+                <div v-if="generateError" class="alert alert-error">{{ generateError }}</div>
+                <div style="text-align: right;">
+                    <button @click="showGenerateModal = false" class="btn" style="background: #6c757d;">取消</button>
+                    <button @click="generateRandomCode" class="btn btn-success" :disabled="isGenerating">
+                        {{ isGenerating ? '生成中...' : '生成' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 詳情模態框 -->
+        <div class="modal" :class="{ show: showDetailsModal }">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>{{ detailsType === 'code' ? '序號詳情' : '對話詳情' }}</h3>
+                    <button @click="showDetailsModal = false" class="close">&times;</button>
+                </div>
+                <div v-if="selectedItem">
+                    <!-- 序號詳情 -->
+                    <div v-if="detailsType === 'code'">
+                        <p><strong>序號:</strong> {{ selectedItem.code }}</p>
+                        <p><strong>類型:</strong> {{ selectedItem.type === 'permanent' ? '永久' : '一次性' }}</p>
+                        <p><strong>狀態:</strong> {{ getStatusText(selectedItem) }}</p>
+                        <p><strong>描述:</strong> {{ selectedItem.description || '無' }}</p>
+                        <p><strong>創建時間:</strong> {{ formatDate(selectedItem.created_at) }}</p>
+                        <p v-if="selectedItem.used_at"><strong>使用時間:</strong> {{ formatDate(selectedItem.used_at) }}</p>
+                        <p v-if="selectedItem.reset_count !== undefined"><strong>重置次數:</strong> {{ selectedItem.reset_count }}</p>
+                        
+                        <div v-if="selectedItem.usage_history && selectedItem.usage_history.length > 0">
+                            <h4 style="margin-top: 20px; margin-bottom: 10px;">使用歷史</h4>
+                            <div v-for="history in selectedItem.usage_history" :key="history.used_at || history.reset_at" 
+                                 style="padding: 10px; background: #f8f9fa; margin-bottom: 5px; border-radius: 5px;">
+                                <p><strong>操作:</strong> {{ history.action === 'used' ? '使用' : '重置' }}</p>
+                                <p><strong>時間:</strong> {{ formatDate(history.used_at || history.reset_at) }}</p>
+                                <p v-if="history.reset_by"><strong>重置者:</strong> {{ history.reset_by }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 對話詳情 -->
+                    <div v-if="detailsType === 'log'">
+                        <p><strong>時間:</strong> {{ formatDate(selectedItem.timestamp) }}</p>
+                        <p><strong>序號:</strong> {{ selectedItem.access_code }}</p>
+                        <p><strong>品牌:</strong> {{ selectedItem.brand }}</p>
+                        <p><strong>IP 地址:</strong> {{ selectedItem.ip_address }}</p>
+                        <p><strong>用戶代理:</strong> {{ selectedItem.user_agent || '無' }}</p>
+                        
+                        <h4 style="margin-top: 20px; margin-bottom: 10px;">用戶訊息</h4>
+                        <div style="padding: 10px; background: #e3f2fd; border-radius: 5px; margin-bottom: 10px;">
+                            {{ selectedItem.user_message }}
+                        </div>
+                        
+                        <h4 style="margin-bottom: 10px;">AI 回應</h4>
+                        <div style="padding: 10px; background: #f3e5f5; border-radius: 5px;">
+                            {{ selectedItem.bot_response }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 成功訊息 -->
+        <div v-if="successMessage" class="alert alert-success" style="position: fixed; top: 20px; right: 20px; z-index: 1001;">
+            {{ successMessage }}
+        </div>
+    </div>
+
+    <script src="js/admin-app.js"></script>
+</body>
+</html>

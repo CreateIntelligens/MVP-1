@@ -1,4 +1,3 @@
-
 # 分析工具產生的檔案
 analysis/
 analysis/analysis_results/
@@ -170,6 +169,10 @@ tmp/
 logs/
 *.backup
 *.bak
+
+# 敏感資料檔案 - 不要提交到 git
+backend/access_codes.json
+backend/chat_logs.json
 
 # Streamlit
 .streamlit/

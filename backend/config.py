@@ -2,6 +2,15 @@
 系統配置管理
 """
 
+import os
+from dotenv import load_dotenv
+
+# 載入環境變數
+load_dotenv()
+
+# 管理員設定
+ADMIN_ACCESS_CODE = os.getenv('ADMIN_ACCESS_CODE', 'ai360')
+
 # Gemma 模型選項
 GEMMA_MODELS = {
     "gemma-3-27b-it": "Gemma 3 27B (推薦)",
