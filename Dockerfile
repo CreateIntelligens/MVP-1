@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # 複製依賴文件
-COPY backend/requirements.txt .
+COPY requirements.txt .
 
 # 安裝 Python 依賴
 RUN pip install --no-cache-dir -r requirements.txt
