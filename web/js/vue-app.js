@@ -79,7 +79,6 @@ const StartupCover = {
                         </div>
                         
                         <div class="access-code-info">
-                            <p><strong>測試序號：</strong> ai360</p>
                             <p>如需一次性序號，請聯繫管理員</p>
                         </div>
                     </div>
