@@ -21,7 +21,7 @@ class NexAvatar {
         this.bboxData = null;
         this.maxFrame = 300;
         this.isFeating = false;
-        this.FPS = 25;
+        this.FPS = 15; // 降低 FPS 讓動畫更流暢，減少閃爍
         this.FRAME_TIME = 1000 / this.FPS;
         this.lastFrameUpdate = 0;
         this.a = 2;
@@ -103,12 +103,14 @@ class NexAvatar {
             return false ;
         }
         var arr = []
+        // 只做正向循環，不做來回動畫，讓人物持續顯示
         for (var i = start ; i <= end ; i++ ){
             arr.push(i);
         }
-        for (var i = end-1; i > start ; i--){
-            arr.push(i) ;
-        }
+        // 移除反向循環，讓動畫更流暢
+        // for (var i = end-1; i > start ; i--){
+        //     arr.push(i) ;
+        // }
         return arr;
     }
 
@@ -148,10 +150,6 @@ class NexAvatar {
             // Style canvas for centering
             canvas.style.display = 'block';
             canvas.style.margin = '0 auto';
-            canvas.style.position = 'absolute';
-            canvas.style.bottom = '28%';
-            canvas.style.left = '50%';
-            canvas.style.transform = 'translateX(-50%)';
 
             var temp_scale = 1 ;
             if (container.clientWidth / 540 < 1.0) {
@@ -513,30 +511,24 @@ class NexAvatar {
 
         const loadImage = async (index, retryCount = 0) => {
             try {
-                // 1: load fore ground
+                // 1: load fore ground - 修改為使用本地圖片
                 const img = new Image();
                 img.crossOrigin = "anonymous";
                 const loadPromise = new Promise((resolve, reject) => {
                     img.onload = () => resolve(img);
                     img.onerror = reject;
                 });
-                img.src = this.api + `/data/${this.avatarName}/raw_jpgs/${index}.jpg`;
+                // 修改圖片路徑為本地 full_imgs 資料夾
+                img.src = `../full_imgs/${String(index).padStart(8, '0')}.png`;
                 const loadedImg = await loadPromise;
                 this.images[index - 1] = loadedImg;
 
-                // 2: load background
+                // 2: load background - 暫時停用遮罩功能
                 if (this.wipeGreen){
-                    const img2 = new Image();
-                    img2.crossOrigin = "anonymous";
-                    const loadPromise2 = new Promise((resolve, reject) => {
-                        img2.onload = () => resolve(img2);
-                        img2.onerror = reject;
-                    });
-                    img2.src = this.api + `/data/${this.avatarName}/pha/${index}.jpg`;
-                    const loadedImg2 = await loadPromise2;
-                    this.masks[index - 1] = loadedImg2;
+                    // 暫時停用綠色背景移除，因為沒有對應的遮罩圖片
+                    this.wipeGreen = false;
+                    console.log("Disabled wipeGreen because no mask images available");
                 }
-
 
                 return true;
             } catch (error) {
@@ -552,28 +544,21 @@ class NexAvatar {
         this.log("current ranges=" + this.ranges) ;
 
         try {
-            for (let r = 0 ; r < this.ranges.length ; r++){
-
-                if (!this.allowRanges.includes(r) && !this.preloadRanges.includes(r)){
-                    console.log("skip range:" + r) ;
-                    continue ;
+            // 載入所有需要的圖片，確保動畫流暢
+            const maxImages = Math.min(50, this.ranges[0][1]); // 增加到 50 張圖片
+            console.log("preload images from 1 to " + maxImages);
+            
+            for (let i = 1; i <= maxImages; i += batchSize) {
+                const batch = [];
+                for (let j = 0; j < batchSize && (i + j) <= maxImages; j++) {
+                    batch.push(loadImage(i + j));
                 }
-                console.log("preload images at r: " + r + "," + this.ranges[r][0] + "~ " + this.ranges[r][1]);
-                for (let i = this.ranges[r][0]; i <= this.ranges[r][1]; i += batchSize) {
-                    const batch = [];
-                    for (let j = 0; j < batchSize && (i + j) <= this.ranges[r][1]; j++) {
-                        batch.push(loadImage(i + j));
-                    }
-                    await Promise.all(batch);
-                }
-
-                if (r == this.preloadRanges[this.preloadRanges.length - 1]) {
-                    this.log("load 0 and 1 done, set loading = false");
-                    this.isLoading = false ;
-                }
+                await Promise.all(batch);
             }
-            this.isRangeLoading = false ;
-            this.log("load all range done, set isRangeLoading = false");
+
+            this.isLoading = false;
+            this.isRangeLoading = false;
+            this.log("load local images done, set loading = false");
 
         } catch (error) {
             this.emit('error', `Error loading images: ${error.message}`);
@@ -609,26 +594,25 @@ class NexAvatar {
 
     async preloadConfigData() {
         try {
-            const response = await fetch(this.api + `/data/${this.avatarName}/config.json?123`);
-            const configData = await response.json();
-            if (configData.ranges && Array.isArray(configData.ranges)) {
-                this.ranges = configData.ranges;
-            }
-            this.log("Get new Range:" + this.ranges);
+            // 使用本地圖片，設定適合的範圍
+            // 根據實際載入的圖片數量來設定範圍
+            this.ranges = [[1, 50]]; // 設定為實際載入的圖片數量
+            this.log("Using local image ranges:" + this.ranges);
             this.setFrameSilence(); // Update action ranges based on new ranges
         } catch (error) {
-            this.emit('error', 'Error loading config data: ' + error);
+            this.emit('error', 'Error setting local config: ' + error);
             // Keep default range if config loading fails
         }
     }
 
     async preloadBoundingBoxData() {
         try {
-            const response = await fetch(this.api + `/data/${this.avatarName}/bbox.json?123`);
-            this.bboxData = await response.json();
-            this.maxFrame = Object.keys(this.bboxData).length;
+            // 使用本地圖片，不需要邊界框數據
+            this.bboxData = null;
+            this.maxFrame = 50; // 設定為實際載入的圖片數量
+            this.log("Using local images, no bounding box data needed");
         } catch (error) {
-            this.emit('error', 'Error loading bounding box data: ' + error);
+            this.emit('error', 'Error setting local bounding box config: ' + error);
         }
     }
 
@@ -651,17 +635,18 @@ class NexAvatar {
         const totalElapsed = timestamp - this.startTime;
         const expectedFrame = Math.floor(totalElapsed / this.FRAME_TIME);
         
-        // 只有當預期幀數大於當前幀數時才更新
-        if (expectedFrame > this.currentFrame) {
+        // 確保動畫連續，避免跳幀
+        if (expectedFrame >= this.currentFrame) {
             this.currentFrame = expectedFrame;
             
-            if (this.currentFrame > 100000) {
-                if (this.silenceRange.length > 0) {
-                    this.currentFrame = this.currentFrame % this.silenceRange.length;
-                }
+            // 當幀數過大時，重置為循環範圍內
+            if (this.silenceRange.length > 0 && this.currentFrame >= this.silenceRange.length) {
+                this.currentFrame = this.currentFrame % this.silenceRange.length;
+                // 重置開始時間以保持流暢的循環
+                this.startTime = timestamp - (this.currentFrame * this.FRAME_TIME);
             }
             
-            // 更新最後一幀的時間點為理論上應該的時間點
+            // 更新最後一幀的時間點
             this.lastFrameUpdate = this.startTime + (this.currentFrame * this.FRAME_TIME);
         }
     }
@@ -708,9 +693,6 @@ class NexAvatar {
 
         this.updateFrame(timestamp);
         const cf = this.currentFrame ;
-
-        this.offscreenCanvas = new OffscreenCanvas(this.canvas.width + this.leftOffset, this.canvas.height);
-        this.offscreenCtx = this.offscreenCanvas.getContext('2d');
         
         var frameIdx = this.silenceRange[cf % this.silenceRange.length] ;
         if (this.actionRange.length > 0 && cf < this.actionRange.length){
@@ -723,7 +705,7 @@ class NexAvatar {
         }
 
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.offscreenCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.offscreenCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
         
 
         if (this.isLoading){
@@ -813,7 +795,9 @@ class NexAvatar {
             }
         }
         else {
-            console.log("Missing bboxData with frame " + frameIdx) ;
+            if (this.debug) {
+                console.log("Missing bboxData with frame " + frameIdx) ;
+            }
         }
 
 

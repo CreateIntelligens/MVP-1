@@ -244,8 +244,10 @@ const app = createApp({
             },
             
             // UI 狀態
-            showStartup: true,
-            countdown: 3,
+            // showStartup: true,  // 暫時註解掉啟動介面
+            // countdown: 3,       // 暫時註解掉倒數計時
+            showStartup: false,    // 直接進入主應用
+            countdown: 0,          // 不需要倒數
             
             // 對話相關
             messages: [],
@@ -287,11 +289,19 @@ const app = createApp({
             // 載入品牌配置
             this.loadBrandConfig();
             
-            // 開始倒數計時
-            this.startCountdown();
-            
             // 載入問題卡片
             await this.loadQuestionCards();
+            
+            // 直接啟動應用（跳過啟動介面）
+            this.hasUserInteracted = true;
+            this.showWelcomeMessage();
+            
+            // 初始化 NexAvatar
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    this.initNexAvatar();
+                }, 100);
+            });
             
             console.log('Vue 應用初始化完成');
         },
