@@ -8,6 +8,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/logs:/var/log/nginx
+      - ./full_imgs:/app/full_imgs:ro  # 掛載 full_imgs 目錄
       # - ./nginx/ssl:/etc/nginx/ssl:ro  # SSL 證書 (可選)
     depends_on:
       - api
