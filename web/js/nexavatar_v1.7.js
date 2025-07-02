@@ -147,19 +147,20 @@ class NexAvatar {
 
             // Create canvas element
             const canvas = document.createElement('canvas');
-            canvas.width = 540 - (this.horiOffset * 2) ;
-            canvas.height = 960 - this.topOffset - this.bottomOffset;
-
-            // canvas.width = container.clientWidth; 
-            // canvas.height = container.clientHeight;
-
-            this.topOffset = canvas.width / 540 * this.topOffset ;
-            // this.leftOffset = ( 540 - canvas.width ) / 2 ;
-            this.leftOffset = 0;
+            // 讓 canvas 寬高等於容器
+            const setCanvasSize = () => {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+            };
+            setCanvasSize();
             
             // Style canvas for centering
             canvas.style.display = 'block';
             canvas.style.margin = '0 auto';
+            // 監聽 resize 事件
+            window.addEventListener('resize', () => {
+                setCanvasSize();
+            });
 
             var temp_scale = 1 ;
             if (container.clientWidth / 540 < 1.0) {
@@ -180,12 +181,17 @@ class NexAvatar {
             
             // Add canvas to container
             container.appendChild(canvas);
-            
-            // Set canvas and context
+            setCanvasSize();
+            // 確保 offscreenCanvas 寬高為正整數且大於 0
+            let offW = canvas.width;
+            let offH = canvas.height;
+            if (!offW || !offH) {
+                offW = 540;
+                offH = 720;
+            }
             this.canvas = canvas;
             this.ctx = canvas.getContext('2d');
-            // Create OffscreenCanvas with the same dimensions as the main canvas
-            this.offscreenCanvas = new OffscreenCanvas(canvas.width + this.leftOffset, canvas.height);
+            this.offscreenCanvas = new OffscreenCanvas(offW, offH);
             this.offscreenCtx = this.offscreenCanvas.getContext('2d');
             this.setScale(temp_scale)
 
@@ -759,37 +765,34 @@ class NexAvatar {
         // 更新音素動畫
         this.updatePhonemeAnimation(timestamp);
         
-        // 檢查是否在音素動畫模式
+        // 等比縮放繪製圖片
+        const drawImageFit = (img) => {
+            const imgRatio = img.width / img.height;
+            const canvasRatio = this.canvas.width / this.canvas.height;
+            let drawWidth, drawHeight, offsetX, offsetY;
+            if (imgRatio > canvasRatio) {
+                drawWidth = this.canvas.width;
+                drawHeight = drawWidth / imgRatio;
+                offsetX = 0;
+                offsetY = (this.canvas.height - drawHeight) / 2;
+            } else {
+                drawHeight = this.canvas.height;
+                drawWidth = drawHeight * imgRatio;
+                offsetX = (this.canvas.width - drawWidth) / 2;
+                offsetY = 0;
+            }
+            this.offscreenCtx.drawImage(img, 0, 0, img.width, img.height, offsetX, offsetY, drawWidth, drawHeight);
+        };
         if (this.isPhonemeMode && this.isFeating) {
-            // 使用音素圖片
             const phonemeImg = this.getCurrentPhonemeImage();
             if (phonemeImg) {
-                this.offscreenCtx.drawImage(phonemeImg, 
-                    this.horiOffset, this.topOffset, phonemeImg.width - (this.horiOffset+this.horiOffset), this.canvas.height,
-                    this.leftOffset, 0, phonemeImg.width - (this.horiOffset+this.horiOffset), this.canvas.height);
-            } else {
-                // 如果音素圖片不可用，使用原始圖片
-                if (this.images[frameIdx-1]) {
-                    let img = this.images[frameIdx-1];
-                    this.offscreenCtx.drawImage(img, 
-                        this.horiOffset, this.topOffset, img.width - (this.horiOffset+this.horiOffset), this.canvas.height,
-                        this.leftOffset, 0, img.width - (this.horiOffset+this.horiOffset), this.canvas.height);
-                }
+                drawImageFit(phonemeImg);
+            } else if (this.images[frameIdx-1]) {
+                drawImageFit(this.images[frameIdx-1]);
             }
         } else {
-            // 使用原始圖片
             if (this.images[frameIdx-1]) {
-                // this.ctx.drawImage(this.images[frameIdx-1], 0, 0, this.canvas.width, this.canvas.height);
-                // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
-                let img = this.images[frameIdx-1];
-                this.offscreenCtx.drawImage(img, 
-                    this.horiOffset, this.topOffset, img.width - (this.horiOffset+this.horiOffset), this.canvas.height,
-                    this.leftOffset, 0, img.width - (this.horiOffset+this.horiOffset), this.canvas.height);
-            }
-            else {
-                if (this.debug) {
-                    console.log("Missing frame idx:" + frameIdx) ;
-                }
+                drawImageFit(this.images[frameIdx-1]);
             }
         }
 
