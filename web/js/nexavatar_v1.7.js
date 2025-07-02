@@ -36,7 +36,7 @@ class NexAvatar {
         //this.allowRanges = [2,3,5,9,10,11,12,13,14,15,16   ,17,18,19,20] ; // 之後才load的，speak 在還沒load完之前ranges會被變成0
         this.allowRanges = [18,19,20] ; // 之後才load的，speak 在還沒load完之前ranges會被變成0
 
-        this.topOffset = 190 ;
+        this.topOffset = 10 ;
         this.bottomOffset = 260 ;
         this.horiOffset = 0;
 
@@ -68,6 +68,14 @@ class NexAvatar {
         this.ws = null;
         this.audio = null;
 
+        // 音素動畫相關屬性
+        this.phonemeImages = [];
+        this.isPhonemeMode = false;
+        this.phonemeFrameIndex = 0;
+        this.phonemeFrameCount = 0;
+        this.phonemeStartTime = 0;
+        this.phonemeFrameDuration = 100; // 每幀持續時間（毫秒）
+
         // temp use toyota ranges
         
 
@@ -80,15 +88,17 @@ class NexAvatar {
 
     setFrameRangeIds(ids){
         var arr = []
-        if (ids == undefined){
+        if (ids == undefined || !this.ranges){
             return arr ;
         }
         for (var i = 0 ; i < ids.length ; i++){
             var id = ids[i];
-            var idStart = this.ranges[id][0] ;
-            var idEnd = this.ranges[id][1] ;
-            for (var j = idStart ; j <= idEnd ; j++){
-                arr.push(j);
+            if (this.ranges[id] && this.ranges[id][0] !== undefined && this.ranges[id][1] !== undefined) {
+                var idStart = this.ranges[id][0] ;
+                var idEnd = this.ranges[id][1] ;
+                for (var j = idStart ; j <= idEnd ; j++){
+                    arr.push(j);
+                }
             }
         }
         return arr;
@@ -249,6 +259,8 @@ class NexAvatar {
             // 支援官方格式：優先使用 text，然後是 content，最後是字串
             const text = typeof dd === 'object' ? (dd.text || dd.content) : dd;
             
+            // 開始音素動畫模式
+            this.startPhonemeMode();
             
             // default range id = 0: silence range
             // range id = 1: speak range
@@ -462,6 +474,9 @@ class NexAvatar {
                                 this.isFeating = false;
                                 this.overlayImages = [] ;
                                 //this.setFrameSilence();
+                                
+                                // 結束音素動畫模式
+                                this.endPhonemeMode();
                                 
                                 // 觸發 speakEnd 事件
                                 this.emit('speakEnd', { message: 'Speech ended' });
@@ -741,18 +756,40 @@ class NexAvatar {
         }
 
 
-        // this.images start from zero
-        if (this.images[frameIdx-1]) {
-            // this.ctx.drawImage(this.images[frameIdx-1], 0, 0, this.canvas.width, this.canvas.height);
-            // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
-            let img = this.images[frameIdx-1];
-            this.offscreenCtx.drawImage(img, 
-                this.horiOffset, this.topOffset, img.width - (this.horiOffset+this.horiOffset), this.canvas.height,
-                this.leftOffset, 0, img.width - (this.horiOffset+this.horiOffset), this.canvas.height);
-        }
-        else {
-            if (this.debug) {
-                console.log("Missing frame idx:" + frameIdx) ;
+        // 更新音素動畫
+        this.updatePhonemeAnimation(timestamp);
+        
+        // 檢查是否在音素動畫模式
+        if (this.isPhonemeMode && this.isFeating) {
+            // 使用音素圖片
+            const phonemeImg = this.getCurrentPhonemeImage();
+            if (phonemeImg) {
+                this.offscreenCtx.drawImage(phonemeImg, 
+                    this.horiOffset, this.topOffset, phonemeImg.width - (this.horiOffset+this.horiOffset), this.canvas.height,
+                    this.leftOffset, 0, phonemeImg.width - (this.horiOffset+this.horiOffset), this.canvas.height);
+            } else {
+                // 如果音素圖片不可用，使用原始圖片
+                if (this.images[frameIdx-1]) {
+                    let img = this.images[frameIdx-1];
+                    this.offscreenCtx.drawImage(img, 
+                        this.horiOffset, this.topOffset, img.width - (this.horiOffset+this.horiOffset), this.canvas.height,
+                        this.leftOffset, 0, img.width - (this.horiOffset+this.horiOffset), this.canvas.height);
+                }
+            }
+        } else {
+            // 使用原始圖片
+            if (this.images[frameIdx-1]) {
+                // this.ctx.drawImage(this.images[frameIdx-1], 0, 0, this.canvas.width, this.canvas.height);
+                // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+                let img = this.images[frameIdx-1];
+                this.offscreenCtx.drawImage(img, 
+                    this.horiOffset, this.topOffset, img.width - (this.horiOffset+this.horiOffset), this.canvas.height,
+                    this.leftOffset, 0, img.width - (this.horiOffset+this.horiOffset), this.canvas.height);
+            }
+            else {
+                if (this.debug) {
+                    console.log("Missing frame idx:" + frameIdx) ;
+                }
             }
         }
 
@@ -807,6 +844,7 @@ class NexAvatar {
             this.removeGreen(this.ctx, this.masks[frameIdx-1]);
         }
 
+
                 
         if (this.debug) {
             this.ctx.font = "20px Arial";
@@ -817,6 +855,11 @@ class NexAvatar {
                 if (this.debug) {
                     this.ctx.fillText("currentFrame=" + cf + " frameidx =" + frameIdx, 50, 70);
                 }
+            }
+            
+            // 顯示音素動畫狀態
+            if (this.isPhonemeMode) {
+                this.ctx.fillText("Phoneme: " + this.phonemeFrameIndex + "/" + this.phonemeImages.length, 50, 100);
             }
         }
 
@@ -856,6 +899,10 @@ class NexAvatar {
 
             // the range 0 must be prepared
             await this.preloadImages();
+            
+            // 載入音素圖片
+            await this.loadPhonemeImages();
+            
             if (this.debug) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
@@ -869,6 +916,9 @@ class NexAvatar {
         this.isFeating = false ;
         this.currentFrame = 0
         this.setFrameSilence();
+
+        // 結束音素動畫模式
+        this.endPhonemeMode();
 
         try {
             // 停止 WebSocket 連線
@@ -890,6 +940,76 @@ class NexAvatar {
         } catch (error) {
             console.error('停止音訊播放時發生錯誤:', error);
         }
+    }
+
+    // 載入音素圖片
+    async loadPhonemeImages() {
+        try {
+            console.log("開始載入音素圖片...");
+            this.phonemeImages = [];
+            
+            // 載入 128 張音素圖片
+            for (let i = 1; i <= 128; i++) {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                
+                await new Promise((resolve, reject) => {
+                    img.onload = () => {
+                        this.phonemeImages.push(img);
+                        resolve();
+                    };
+                    img.onerror = (error) => {
+                        console.warn(`無法載入音素圖片 ${i}:`, error);
+                        reject(error);
+                    };
+                    img.src = `../phoneme/ComfyUI_test1_${String(i).padStart(5, '0')}_.png`;
+                });
+            }
+            
+            console.log(`成功載入 ${this.phonemeImages.length} 張音素圖片`);
+        } catch (error) {
+            console.error("載入音素圖片時發生錯誤:", error);
+        }
+    }
+
+    // 開始音素動畫模式
+    startPhonemeMode() {
+        console.log("開始音素動畫模式");
+        this.isPhonemeMode = true;
+        this.phonemeFrameIndex = 0;
+        this.phonemeFrameCount = 0;
+        this.phonemeStartTime = performance.now();
+    }
+
+    // 結束音素動畫模式
+    endPhonemeMode() {
+        console.log("結束音素動畫模式");
+        this.isPhonemeMode = false;
+        this.phonemeFrameIndex = 0;
+        this.phonemeFrameCount = 0;
+    }
+
+    // 更新音素動畫
+    updatePhonemeAnimation(timestamp) {
+        if (!this.isPhonemeMode || this.phonemeImages.length === 0) {
+            return;
+        }
+
+        const elapsed = timestamp - this.phonemeStartTime;
+        const frameIndex = Math.floor(elapsed / this.phonemeFrameDuration) % this.phonemeImages.length;
+        
+        if (frameIndex !== this.phonemeFrameIndex) {
+            this.phonemeFrameIndex = frameIndex;
+            this.phonemeFrameCount++;
+        }
+    }
+
+    // 獲取當前音素圖片
+    getCurrentPhonemeImage() {
+        if (this.isPhonemeMode && this.phonemeImages.length > 0) {
+            return this.phonemeImages[this.phonemeFrameIndex];
+        }
+        return null;
     }
 }
 

@@ -265,6 +265,9 @@ const app = createApp({
             hasUserInteracted: false,
             pendingWelcomeMessage: false,
             
+            // 音素管理器
+    
+            
             // 狀態顯示
             statusMessage: 'System initializing...',
             statusType: 'info',
@@ -305,6 +308,8 @@ const app = createApp({
             
             console.log('Vue 應用初始化完成');
         },
+        
+
         
         // 載入品牌配置
         loadBrandConfig() {
@@ -442,10 +447,12 @@ const app = createApp({
                         window.avatar = this.avatar;
                         
                         // 設定事件監聽器
-                        this.avatar.on('intialSucccess', () => {
+                        this.avatar.on('intialSucccess', async () => {
                             console.log('NexAvatar 初始化成功');
                             this.isAvatarReady = true;
                             this.updateStatus('虛擬助理已準備就緒！', 'success');
+                            
+
                             
                             this.avatar.start({
                                 wipeGreen: true,
@@ -802,6 +809,8 @@ const app = createApp({
             try {
                 if (this.avatar) {
                     this.avatar.stop();
+                    
+
                     
                     if (this.avatar.audio) {
                         this.avatar.audio.pause();

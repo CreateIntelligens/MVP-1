@@ -90,6 +90,21 @@
 
 /* 響應式設計 - 手機版 */
 @media (max-width: 768px) {
+    html, body {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+    }
+    .container {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+    .main-content {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+        height: calc(100vh - 200px);
+    }
     #disclaimer-box {
         border-radius: 1rem;
         max-width: 90%;
@@ -107,6 +122,56 @@
     }
     .scrollable-content ol {
         font-size: 1em !important;
+    }
+    .avatar-container {
+        width: 540px;
+        height: 40%;
+        min-height: 250px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .chat-container {
+        height: 70vh;
+        /* min-height: 300px; */
+    }
+    .mode-selector {
+        flex-direction: row;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .mode-btn {
+        width: auto;
+        min-width: 140px;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+    .controls-container {
+        flex-direction: row;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .voice-settings {
+        display: flex;
+        justify-content: center;
+    }
+    .voice-selector {
+        padding: 6px 10px;
+        flex-direction: row;
+        gap: 6px;
+        text-align: center;
+        min-width: auto;
+    }
+    .voice-selector label {
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+    #voice-select {
+        min-width: 140px;
+        font-size: 0.8rem;
+        padding: 4px 8px;
     }
 }
 
@@ -131,9 +196,9 @@ body {
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 15px;
+    padding: 10px;
     height: 100vh;
     display: flex; /* 主應用一開始就顯示 */
     flex-direction: column;
@@ -141,7 +206,7 @@ body {
     overflow: hidden;
 }
 
-/* 公司 Logo */
+/* 公司 Logo - 保留用於其他地方的樣式 */
 .company-logo {
     position: absolute;
     top: 10px;
@@ -163,20 +228,64 @@ body {
 
 /* 標題區域 */
 .header {
-    text-align: center;
-    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
     color: white;
+    position: relative;
+    padding: 10px 0;
+}
+
+.header .company-logo {
+    position: static;
+    flex-shrink: 0;
+}
+
+.header .company-logo img {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    transition: transform 0.3s ease;
+}
+
+.header .company-logo img:hover {
+    transform: scale(1.05);
 }
 
 .header h1 {
-    font-size: 2.2rem;
-    margin-bottom: 8px;
+    font-size: 1.8rem;
+    margin: 0;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    flex: 1;
+    text-align: center;
 }
 
 .header p {
-    font-size: 1.1rem;
+    font-size: 1rem;
     opacity: 0.9;
+    margin: 0;
+}
+
+.header .logout-button {
+    position: static;
+    flex-shrink: 0;
+    padding: 8px 16px;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.header .logout-button:hover {
+    background: rgba(220, 53, 69, 1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
 }
 
 /* 控制區域容器 */
@@ -184,15 +293,17 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    gap: 20px;
+    margin-bottom: 15px;
+    gap: 15px;
+    flex-wrap: wrap;
 }
 
 /* 模式選擇區域 */
 .mode-selector {
     display: flex;
+    flex-direction: row;
     gap: 15px;
-    flex-wrap: wrap;
+    /* flex-wrap: wrap; */
 }
 
 .mode-btn {
@@ -268,31 +379,35 @@ body {
 /* 主要內容區域 */
 .main-content {
     display: flex;
-    gap: 30px;
+    gap: 20px;
     flex: 1;
-    min-height: 600px;
+    height: calc(100vh - 200px);
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
-    padding: 30px;
+    padding: 20px;
+    margin-bottom: 10px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     backdrop-filter: blur(10px);
+    align-items: flex-start;
 }
 
 /* 虛擬人物容器 */
 .avatar-container {
     width: 540px;
     height: 100%;
-    min-height: 600px;
     border: none;
     border-radius: 20px;
-    background: 
+    /* background: 
         linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%),
-        url('../img/background.png') center/cover no-repeat;
+        url('../img/background.png') center/cover no-repeat; */
     position: relative;
     overflow: hidden;
     box-shadow: 0 8px 25px rgba(0,0,0,0.15);
     backdrop-filter: blur(10px);
     align-self: stretch;
+    flex-shrink: 0;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .avatar-container::before {
@@ -330,9 +445,9 @@ body {
 
 .loading-text {
     position: absolute;
-    top: 80%;
+    bottom: 20px;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%);
     text-align: center;
     color: white;
     z-index: 1;
@@ -348,11 +463,12 @@ body {
 /* NexAvatar Canvas 位置調整 */
 .avatar-container canvas {
     position: absolute !important;
-    top: 15% !important;
+    top: 50% !important;
     left: 50% !important;
-    transform: translateX(-50%) !important;
-    bottom: auto !important;
+    transform: translate(-50%, -50%) !important;
     z-index: 10 !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
 }
 
 /* 對話區域 */
@@ -360,22 +476,23 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
 .conversation {
     overflow-y: auto;
-    padding: 20px;
+    padding: 15px;
     background: #f8f9fa;
     border-radius: 15px;
-    margin-bottom: 15px;
-    height: 500px;
+    margin-bottom: 10px;
+    flex: 1;
     border: 1px solid #e9ecef;
 }
 
 /* 快速問題卡片 */
 .quick-questions {
-    margin-bottom: 15px;
-    padding: 15px;
+    margin-bottom: 10px;
+    padding: 12px;
     background: rgba(255, 255, 255, 0.9);
     border-radius: 12px;
     border: 1px solid #e9ecef;
@@ -405,15 +522,15 @@ body {
     background: white;
     border: 1px solid #e9ecef;
     border-radius: 8px;
-    padding: 12px 15px;
+    padding: 10px 12px;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: #333;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     flex: 1;
-    min-width: 200px;
+    min-width: 180px;
 }
 
 .question-card:hover {
@@ -448,9 +565,9 @@ body {
 
 .message-content {
     max-width: 80%;
-    padding: 15px 20px;
+    padding: 12px 16px;
     border-radius: 20px;
-    line-height: 1.5;
+    line-height: 1.4;
     position: relative;
     transition: all 0.2s ease;
 }
@@ -521,10 +638,10 @@ body {
 
 #user-input {
     flex: 1;
-    padding: 15px 20px;
+    padding: 12px 16px;
     border: 2px solid #e9ecef;
     border-radius: 25px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     outline: none;
     transition: border-color 0.3s ease;
 }
@@ -535,15 +652,15 @@ body {
 }
 
 #send-btn {
-    padding: 15px 30px;
+    padding: 12px 24px;
     background: #007bff;
     color: white;
     border: none;
     border-radius: 25px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     cursor: pointer;
     transition: all 0.3s ease;
-    min-width: 80px;
+    min-width: 70px;
 }
 
 #send-btn:hover {
@@ -622,31 +739,180 @@ body {
 
 /* 響應式設計 */
 @media (max-width: 768px) {
-    .main-content {
+    .header {
         flex-direction: column;
-        gap: 20px;
+        gap: 10px;
+        text-align: center;
     }
     
-    .avatar-container {
-        width: 100%;
-        height: 300px;
-    }
-    
-    .mode-selector {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .mode-btn {
-        width: 200px;
+    .header .company-logo img {
+        height: 35px;
     }
     
     .header h1 {
-        font-size: 2rem;
+        font-size: 1.4rem;
+        order: 2;
     }
     
-    .conversation {
-        max-height: 300px;
+    .header .logout-button {
+        order: 3;
+        align-self: center;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .main-content {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+        height: calc(100vh - 200px);
+    }
+    
+    .avatar-container {
+        width: 540px;
+        height: 40%;
+        min-height: 250px;
+    }
+    
+    .chat-container {
+        height: 60%;
+        min-height: 300px;
+    }
+    
+    .mode-selector {
+        flex-direction: row;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .mode-btn {
+        width: auto;
+        min-width: 140px;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .controls-container {
+        flex-direction: row;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .voice-settings {
+        display: flex;
+        justify-content: center;
+    }
+    
+    .voice-selector {
+        padding: 6px 10px;
+        flex-direction: row;
+        gap: 6px;
+        text-align: center;
+        min-width: auto;
+    }
+    
+    .voice-selector label {
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+    
+    #voice-select {
+        min-width: 140px;
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+}
+
+/* 平板尺寸響應式設計 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .header .company-logo img {
+        height: 35px;
+    }
+    
+    .header h1 {
+        font-size: 1.6rem;
+    }
+    
+    .header .logout-button {
+        padding: 7px 14px;
+        font-size: 0.85rem;
+    }
+    
+    .controls-container {
+        flex-direction: row;
+        gap: 12px;
+    }
+    
+    .mode-btn {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+    }
+    
+    .voice-selector {
+        padding: 8px 14px;
+    }
+    
+    #voice-select {
+        min-width: 160px;
+        font-size: 0.85rem;
+    }
+    
+    .main-content {
+        height: calc(100vh - 180px);
+    }
+    
+    .avatar-container {
+        width: 450px;
+        height: 100%;
+    }
+    
+    .chat-container {
+        height: 100%;
+    }
+}
+
+/* 小螢幕桌面響應式設計 */
+@media (min-width: 1025px) and (max-width: 1200px) {
+    .header .company-logo img {
+        height: 38px;
+    }
+    
+    .header h1 {
+        font-size: 1.7rem;
+    }
+    
+    .controls-container {
+        gap: 15px;
+    }
+    
+    .mode-btn {
+        padding: 11px 18px;
+        font-size: 0.9rem;
+    }
+    
+    .voice-selector {
+        padding: 9px 15px;
+    }
+    
+    #voice-select {
+        min-width: 170px;
+        font-size: 0.9rem;
+    }
+    
+    .main-content {
+        height: calc(100vh - 180px);
+    }
+    
+    .avatar-container {
+        width: 480px;
+        height: 100%;
+    }
+    
+    .chat-container {
+        height: 100%;
     }
 }
 
@@ -803,7 +1069,7 @@ body {
     margin-bottom: 5px;
 }
 
-/* 登出按鈕 */
+/* 登出按鈕 - 保留用於其他地方的樣式 */
 .logout-button {
     position: absolute;
     top: 20px;
