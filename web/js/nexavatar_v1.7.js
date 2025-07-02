@@ -165,19 +165,14 @@ class NexAvatar {
             var temp_scale = 1 ;
             if (container.clientWidth / 540 < 1.0) {
                 temp_scale = Math.round((container.clientWidth / 540 * 0.9) * 100) / 100;
-                
-                canvas.width = container.clientWidth; 
-                
+                // 不再硬編碼 canvas.width/canvas.height，全部交給 setCanvasSize 處理
                 this.topOffset = Math.round(this.topOffset / 0.9);
                 this.horiOffset = 0;
                 this.leftOffset = Math.round((540 - container.clientWidth) * 0.92);
-                
-                canvas.height = 960 - this.topOffset - this.bottomOffset;
-
                 canvas.style.top = '0px';
                 canvas.style.bottom = 'auto';
             }
-            canvas.width = 540 ;
+            // 不再 canvas.width = 540;
             
             // Add canvas to container
             container.appendChild(canvas);
@@ -204,6 +199,9 @@ class NexAvatar {
             console.log("horiOffset=" + this.horiOffset);
             console.log("scale=" + this.scale);
             console.log("----------")
+
+            // 初始化後主動觸發一次 resize，確保初始狀態正確
+            window.dispatchEvent(new Event('resize'));
         }
         this.emit('intialSucccess', 'All images loaded successfully');
         return {};

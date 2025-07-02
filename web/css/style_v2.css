@@ -394,7 +394,8 @@ body {
 
 /* 虛擬人物容器 */
 .avatar-container {
-    width: 540px;
+    max-width: 422px;
+    width: 100%;
     height: 100%;
     border: none;
     border-radius: 20px;
@@ -404,8 +405,8 @@ body {
     overflow: hidden;
     box-shadow: 0 8px 25px rgba(0,0,0,0.15);
     backdrop-filter: blur(10px);
-    /* align-self: stretch; */
-    /* flex-shrink: 0; */
+    align-self: stretch;
+    flex-shrink: 0;
     margin-left: auto;
     margin-right: auto;
 }
