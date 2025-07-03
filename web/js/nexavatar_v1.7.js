@@ -21,7 +21,7 @@ class NexAvatar {
         this.bboxData = null;
         this.maxFrame = 300;
         this.isFeating = false;
-        this.FPS = 25;
+        this.FPS = 15; // 降低 FPS 讓動畫更流暢，減少閃爍
         this.FRAME_TIME = 1000 / this.FPS;
         this.lastFrameUpdate = 0;
         this.a = 2;
@@ -36,7 +36,7 @@ class NexAvatar {
         //this.allowRanges = [2,3,5,9,10,11,12,13,14,15,16   ,17,18,19,20] ; // 之後才load的，speak 在還沒load完之前ranges會被變成0
         this.allowRanges = [18,19,20] ; // 之後才load的，speak 在還沒load完之前ranges會被變成0
 
-        this.topOffset = 190 ;
+        this.topOffset = 10 ;
         this.bottomOffset = 260 ;
         this.horiOffset = 0;
 
@@ -68,6 +68,14 @@ class NexAvatar {
         this.ws = null;
         this.audio = null;
 
+        // 音素動畫相關屬性
+        this.phonemeImages = [];
+        this.isPhonemeMode = false;
+        this.phonemeFrameIndex = 0;
+        this.phonemeFrameCount = 0;
+        this.phonemeStartTime = 0;
+        this.phonemeFrameDuration = 100; // 每幀持續時間（毫秒）
+
         // temp use toyota ranges
         
 
@@ -80,15 +88,17 @@ class NexAvatar {
 
     setFrameRangeIds(ids){
         var arr = []
-        if (ids == undefined){
+        if (ids == undefined || !this.ranges){
             return arr ;
         }
         for (var i = 0 ; i < ids.length ; i++){
             var id = ids[i];
-            var idStart = this.ranges[id][0] ;
-            var idEnd = this.ranges[id][1] ;
-            for (var j = idStart ; j <= idEnd ; j++){
-                arr.push(j);
+            if (this.ranges[id] && this.ranges[id][0] !== undefined && this.ranges[id][1] !== undefined) {
+                var idStart = this.ranges[id][0] ;
+                var idEnd = this.ranges[id][1] ;
+                for (var j = idStart ; j <= idEnd ; j++){
+                    arr.push(j);
+                }
             }
         }
         return arr;
@@ -103,12 +113,14 @@ class NexAvatar {
             return false ;
         }
         var arr = []
+        // 只做正向循環，不做來回動畫，讓人物持續顯示
         for (var i = start ; i <= end ; i++ ){
             arr.push(i);
         }
-        for (var i = end-1; i > start ; i--){
-            arr.push(i) ;
-        }
+        // 移除反向循環，讓動畫更流暢
+        // for (var i = end-1; i > start ; i--){
+        //     arr.push(i) ;
+        // }
         return arr;
     }
 
@@ -135,49 +147,46 @@ class NexAvatar {
 
             // Create canvas element
             const canvas = document.createElement('canvas');
-            canvas.width = 540 - (this.horiOffset * 2) ;
-            canvas.height = 960 - this.topOffset - this.bottomOffset;
-
-            // canvas.width = container.clientWidth; 
-            // canvas.height = container.clientHeight;
-
-            this.topOffset = canvas.width / 540 * this.topOffset ;
-            // this.leftOffset = ( 540 - canvas.width ) / 2 ;
-            this.leftOffset = 0;
+            // 讓 canvas 寬高等於容器
+            const setCanvasSize = () => {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+            };
+            setCanvasSize();
             
             // Style canvas for centering
             canvas.style.display = 'block';
             canvas.style.margin = '0 auto';
-            canvas.style.position = 'absolute';
-            canvas.style.bottom = '28%';
-            canvas.style.left = '50%';
-            canvas.style.transform = 'translateX(-50%)';
+            // 監聽 resize 事件
+            window.addEventListener('resize', () => {
+                setCanvasSize();
+            });
 
             var temp_scale = 1 ;
             if (container.clientWidth / 540 < 1.0) {
                 temp_scale = Math.round((container.clientWidth / 540 * 0.9) * 100) / 100;
-                
-                canvas.width = container.clientWidth; 
-                
+                // 不再硬編碼 canvas.width/canvas.height，全部交給 setCanvasSize 處理
                 this.topOffset = Math.round(this.topOffset / 0.9);
                 this.horiOffset = 0;
                 this.leftOffset = Math.round((540 - container.clientWidth) * 0.92);
-                
-                canvas.height = 960 - this.topOffset - this.bottomOffset;
-
                 canvas.style.top = '0px';
                 canvas.style.bottom = 'auto';
             }
-            canvas.width = 540 ;
+            // 不再 canvas.width = 540;
             
             // Add canvas to container
             container.appendChild(canvas);
-            
-            // Set canvas and context
+            setCanvasSize();
+            // 確保 offscreenCanvas 寬高為正整數且大於 0
+            let offW = canvas.width;
+            let offH = canvas.height;
+            if (!offW || !offH) {
+                offW = 540;
+                offH = 720;
+            }
             this.canvas = canvas;
             this.ctx = canvas.getContext('2d');
-            // Create OffscreenCanvas with the same dimensions as the main canvas
-            this.offscreenCanvas = new OffscreenCanvas(canvas.width + this.leftOffset, canvas.height);
+            this.offscreenCanvas = new OffscreenCanvas(offW, offH);
             this.offscreenCtx = this.offscreenCanvas.getContext('2d');
             this.setScale(temp_scale)
 
@@ -190,6 +199,9 @@ class NexAvatar {
             console.log("horiOffset=" + this.horiOffset);
             console.log("scale=" + this.scale);
             console.log("----------")
+
+            // 初始化後主動觸發一次 resize，確保初始狀態正確
+            window.dispatchEvent(new Event('resize'));
         }
         this.emit('intialSucccess', 'All images loaded successfully');
         return {};
@@ -251,6 +263,8 @@ class NexAvatar {
             // 支援官方格式：優先使用 text，然後是 content，最後是字串
             const text = typeof dd === 'object' ? (dd.text || dd.content) : dd;
             
+            // 開始音素動畫模式
+            this.startPhonemeMode();
             
             // default range id = 0: silence range
             // range id = 1: speak range
@@ -465,6 +479,9 @@ class NexAvatar {
                                 this.overlayImages = [] ;
                                 //this.setFrameSilence();
                                 
+                                // 結束音素動畫模式
+                                this.endPhonemeMode();
+                                
                                 // 觸發 speakEnd 事件
                                 this.emit('speakEnd', { message: 'Speech ended' });
                             });
@@ -513,30 +530,24 @@ class NexAvatar {
 
         const loadImage = async (index, retryCount = 0) => {
             try {
-                // 1: load fore ground
+                // 1: load fore ground - 修改為使用本地圖片
                 const img = new Image();
                 img.crossOrigin = "anonymous";
                 const loadPromise = new Promise((resolve, reject) => {
                     img.onload = () => resolve(img);
                     img.onerror = reject;
                 });
-                img.src = this.api + `/data/${this.avatarName}/raw_jpgs/${index}.jpg`;
+                // 修改圖片路徑為本地 full_imgs 資料夾
+                img.src = `../full_imgs/${String(index).padStart(8, '0')}.png`;
                 const loadedImg = await loadPromise;
                 this.images[index - 1] = loadedImg;
 
-                // 2: load background
+                // 2: load background - 暫時停用遮罩功能
                 if (this.wipeGreen){
-                    const img2 = new Image();
-                    img2.crossOrigin = "anonymous";
-                    const loadPromise2 = new Promise((resolve, reject) => {
-                        img2.onload = () => resolve(img2);
-                        img2.onerror = reject;
-                    });
-                    img2.src = this.api + `/data/${this.avatarName}/pha/${index}.jpg`;
-                    const loadedImg2 = await loadPromise2;
-                    this.masks[index - 1] = loadedImg2;
+                    // 暫時停用綠色背景移除，因為沒有對應的遮罩圖片
+                    this.wipeGreen = false;
+                    console.log("Disabled wipeGreen because no mask images available");
                 }
-
 
                 return true;
             } catch (error) {
@@ -552,28 +563,21 @@ class NexAvatar {
         this.log("current ranges=" + this.ranges) ;
 
         try {
-            for (let r = 0 ; r < this.ranges.length ; r++){
-
-                if (!this.allowRanges.includes(r) && !this.preloadRanges.includes(r)){
-                    console.log("skip range:" + r) ;
-                    continue ;
+            // 載入所有需要的圖片，確保動畫流暢
+            const maxImages = Math.min(50, this.ranges[0][1]); // 增加到 50 張圖片
+            console.log("preload images from 1 to " + maxImages);
+            
+            for (let i = 1; i <= maxImages; i += batchSize) {
+                const batch = [];
+                for (let j = 0; j < batchSize && (i + j) <= maxImages; j++) {
+                    batch.push(loadImage(i + j));
                 }
-                console.log("preload images at r: " + r + "," + this.ranges[r][0] + "~ " + this.ranges[r][1]);
-                for (let i = this.ranges[r][0]; i <= this.ranges[r][1]; i += batchSize) {
-                    const batch = [];
-                    for (let j = 0; j < batchSize && (i + j) <= this.ranges[r][1]; j++) {
-                        batch.push(loadImage(i + j));
-                    }
-                    await Promise.all(batch);
-                }
-
-                if (r == this.preloadRanges[this.preloadRanges.length - 1]) {
-                    this.log("load 0 and 1 done, set loading = false");
-                    this.isLoading = false ;
-                }
+                await Promise.all(batch);
             }
-            this.isRangeLoading = false ;
-            this.log("load all range done, set isRangeLoading = false");
+
+            this.isLoading = false;
+            this.isRangeLoading = false;
+            this.log("load local images done, set loading = false");
 
         } catch (error) {
             this.emit('error', `Error loading images: ${error.message}`);
@@ -609,26 +613,25 @@ class NexAvatar {
 
     async preloadConfigData() {
         try {
-            const response = await fetch(this.api + `/data/${this.avatarName}/config.json?123`);
-            const configData = await response.json();
-            if (configData.ranges && Array.isArray(configData.ranges)) {
-                this.ranges = configData.ranges;
-            }
-            this.log("Get new Range:" + this.ranges);
+            // 使用本地圖片，設定適合的範圍
+            // 根據實際載入的圖片數量來設定範圍
+            this.ranges = [[1, 50]]; // 設定為實際載入的圖片數量
+            this.log("Using local image ranges:" + this.ranges);
             this.setFrameSilence(); // Update action ranges based on new ranges
         } catch (error) {
-            this.emit('error', 'Error loading config data: ' + error);
+            this.emit('error', 'Error setting local config: ' + error);
             // Keep default range if config loading fails
         }
     }
 
     async preloadBoundingBoxData() {
         try {
-            const response = await fetch(this.api + `/data/${this.avatarName}/bbox.json?123`);
-            this.bboxData = await response.json();
-            this.maxFrame = Object.keys(this.bboxData).length;
+            // 使用本地圖片，不需要邊界框數據
+            this.bboxData = null;
+            this.maxFrame = 50; // 設定為實際載入的圖片數量
+            this.log("Using local images, no bounding box data needed");
         } catch (error) {
-            this.emit('error', 'Error loading bounding box data: ' + error);
+            this.emit('error', 'Error setting local bounding box config: ' + error);
         }
     }
 
@@ -651,17 +654,18 @@ class NexAvatar {
         const totalElapsed = timestamp - this.startTime;
         const expectedFrame = Math.floor(totalElapsed / this.FRAME_TIME);
         
-        // 只有當預期幀數大於當前幀數時才更新
-        if (expectedFrame > this.currentFrame) {
+        // 確保動畫連續，避免跳幀
+        if (expectedFrame >= this.currentFrame) {
             this.currentFrame = expectedFrame;
             
-            if (this.currentFrame > 100000) {
-                if (this.silenceRange.length > 0) {
-                    this.currentFrame = this.currentFrame % this.silenceRange.length;
-                }
+            // 當幀數過大時，重置為循環範圍內
+            if (this.silenceRange.length > 0 && this.currentFrame >= this.silenceRange.length) {
+                this.currentFrame = this.currentFrame % this.silenceRange.length;
+                // 重置開始時間以保持流暢的循環
+                this.startTime = timestamp - (this.currentFrame * this.FRAME_TIME);
             }
             
-            // 更新最後一幀的時間點為理論上應該的時間點
+            // 更新最後一幀的時間點
             this.lastFrameUpdate = this.startTime + (this.currentFrame * this.FRAME_TIME);
         }
     }
@@ -708,9 +712,6 @@ class NexAvatar {
 
         this.updateFrame(timestamp);
         const cf = this.currentFrame ;
-
-        this.offscreenCanvas = new OffscreenCanvas(this.canvas.width + this.leftOffset, this.canvas.height);
-        this.offscreenCtx = this.offscreenCanvas.getContext('2d');
         
         var frameIdx = this.silenceRange[cf % this.silenceRange.length] ;
         if (this.actionRange.length > 0 && cf < this.actionRange.length){
@@ -723,7 +724,7 @@ class NexAvatar {
         }
 
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.offscreenCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.offscreenCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
         
 
         if (this.isLoading){
@@ -759,18 +760,37 @@ class NexAvatar {
         }
 
 
-        // this.images start from zero
-        if (this.images[frameIdx-1]) {
-            // this.ctx.drawImage(this.images[frameIdx-1], 0, 0, this.canvas.width, this.canvas.height);
-            // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
-            let img = this.images[frameIdx-1];
-            this.offscreenCtx.drawImage(img, 
-                this.horiOffset, this.topOffset, img.width - (this.horiOffset+this.horiOffset), this.canvas.height,
-                this.leftOffset, 0, img.width - (this.horiOffset+this.horiOffset), this.canvas.height);
-        }
-        else {
-            if (this.debug) {
-                console.log("Missing frame idx:" + frameIdx) ;
+        // 更新音素動畫
+        this.updatePhonemeAnimation(timestamp);
+        
+        // 等比縮放繪製圖片
+        const drawImageFit = (img) => {
+            const imgRatio = img.width / img.height;
+            const canvasRatio = this.canvas.width / this.canvas.height;
+            let drawWidth, drawHeight, offsetX, offsetY;
+            if (imgRatio > canvasRatio) {
+                drawWidth = this.canvas.width;
+                drawHeight = drawWidth / imgRatio;
+                offsetX = 0;
+                offsetY = (this.canvas.height - drawHeight) / 2;
+            } else {
+                drawHeight = this.canvas.height;
+                drawWidth = drawHeight * imgRatio;
+                offsetX = (this.canvas.width - drawWidth) / 2;
+                offsetY = 0;
+            }
+            this.offscreenCtx.drawImage(img, 0, 0, img.width, img.height, offsetX, offsetY, drawWidth, drawHeight);
+        };
+        if (this.isPhonemeMode && this.isFeating) {
+            const phonemeImg = this.getCurrentPhonemeImage();
+            if (phonemeImg) {
+                drawImageFit(phonemeImg);
+            } else if (this.images[frameIdx-1]) {
+                drawImageFit(this.images[frameIdx-1]);
+            }
+        } else {
+            if (this.images[frameIdx-1]) {
+                drawImageFit(this.images[frameIdx-1]);
             }
         }
 
@@ -813,7 +833,9 @@ class NexAvatar {
             }
         }
         else {
-            console.log("Missing bboxData with frame " + frameIdx) ;
+            if (this.debug) {
+                console.log("Missing bboxData with frame " + frameIdx) ;
+            }
         }
 
 
@@ -822,6 +844,7 @@ class NexAvatar {
             // Now apply the removeGreen effect
             this.removeGreen(this.ctx, this.masks[frameIdx-1]);
         }
+
 
                 
         if (this.debug) {
@@ -833,6 +856,11 @@ class NexAvatar {
                 if (this.debug) {
                     this.ctx.fillText("currentFrame=" + cf + " frameidx =" + frameIdx, 50, 70);
                 }
+            }
+            
+            // 顯示音素動畫狀態
+            if (this.isPhonemeMode) {
+                this.ctx.fillText("Phoneme: " + this.phonemeFrameIndex + "/" + this.phonemeImages.length, 50, 100);
             }
         }
 
@@ -872,6 +900,10 @@ class NexAvatar {
 
             // the range 0 must be prepared
             await this.preloadImages();
+            
+            // 載入音素圖片
+            await this.loadPhonemeImages();
+            
             if (this.debug) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
@@ -885,6 +917,9 @@ class NexAvatar {
         this.isFeating = false ;
         this.currentFrame = 0
         this.setFrameSilence();
+
+        // 結束音素動畫模式
+        this.endPhonemeMode();
 
         try {
             // 停止 WebSocket 連線
@@ -906,6 +941,76 @@ class NexAvatar {
         } catch (error) {
             console.error('停止音訊播放時發生錯誤:', error);
         }
+    }
+
+    // 載入音素圖片
+    async loadPhonemeImages() {
+        try {
+            console.log("開始載入音素圖片...");
+            this.phonemeImages = [];
+            
+            // 載入 128 張音素圖片
+            for (let i = 1; i <= 128; i++) {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                
+                await new Promise((resolve, reject) => {
+                    img.onload = () => {
+                        this.phonemeImages.push(img);
+                        resolve();
+                    };
+                    img.onerror = (error) => {
+                        console.warn(`無法載入音素圖片 ${i}:`, error);
+                        reject(error);
+                    };
+                    img.src = `../phoneme/ComfyUI_test1_${String(i).padStart(5, '0')}_.png`;
+                });
+            }
+            
+            console.log(`成功載入 ${this.phonemeImages.length} 張音素圖片`);
+        } catch (error) {
+            console.error("載入音素圖片時發生錯誤:", error);
+        }
+    }
+
+    // 開始音素動畫模式
+    startPhonemeMode() {
+        console.log("開始音素動畫模式");
+        this.isPhonemeMode = true;
+        this.phonemeFrameIndex = 0;
+        this.phonemeFrameCount = 0;
+        this.phonemeStartTime = performance.now();
+    }
+
+    // 結束音素動畫模式
+    endPhonemeMode() {
+        console.log("結束音素動畫模式");
+        this.isPhonemeMode = false;
+        this.phonemeFrameIndex = 0;
+        this.phonemeFrameCount = 0;
+    }
+
+    // 更新音素動畫
+    updatePhonemeAnimation(timestamp) {
+        if (!this.isPhonemeMode || this.phonemeImages.length === 0) {
+            return;
+        }
+
+        const elapsed = timestamp - this.phonemeStartTime;
+        const frameIndex = Math.floor(elapsed / this.phonemeFrameDuration) % this.phonemeImages.length;
+        
+        if (frameIndex !== this.phonemeFrameIndex) {
+            this.phonemeFrameIndex = frameIndex;
+            this.phonemeFrameCount++;
+        }
+    }
+
+    // 獲取當前音素圖片
+    getCurrentPhonemeImage() {
+        if (this.isPhonemeMode && this.phonemeImages.length > 0) {
+            return this.phonemeImages[this.phonemeFrameIndex];
+        }
+        return null;
     }
 }
 

@@ -1,0 +1,13 @@
+{
+  "name": "mvp-1",
+  "version": "1.0.0",
+  "description": "支援多個品牌的 AI 虛擬助理系統，使用 NexAvatar 技術實現虛擬人物動畫。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {}
+}
