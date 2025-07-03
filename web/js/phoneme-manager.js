@@ -5,6 +5,7 @@
 
 class PhonemeManager {
     constructor() {
+        
         this.phonemeImages = [];
         this.originalImages = [];
         this.isPhonemeMode = false;
