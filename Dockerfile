@@ -6,7 +6,8 @@ WORKDIR /app
 # 複製依賴文件
 COPY requirements.txt .
 
-# 安裝 Python 依賴
+# 安裝系統依賴和 Python 依賴
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 複製應用程式代碼
