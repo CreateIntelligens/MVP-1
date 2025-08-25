@@ -440,7 +440,7 @@ const app = createApp({
                             this.avatar.start({
                                 wipeGreen: true,
                                 debug: false,
-                                api: 'https://nexretail.scsonic.com'
+                                api: 'https://nexretail2.scsonic.com'
                             }).then(() => {
                                 if (this.pendingWelcomeMessage && this.hasUserInteracted) {
                                     setTimeout(() => {
