@@ -4,7 +4,7 @@ services:
     image: nginx:alpine
     ports:
       - "8884:8884"
-      - "443:443"  # HTTPS (可選)
+      # - "443:443"  # HTTPS (可選)
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/logs:/var/log/nginx
@@ -22,7 +22,7 @@ services:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD", "sh", "-c", "wget -q --spider http://127.0.0.1:8884/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
