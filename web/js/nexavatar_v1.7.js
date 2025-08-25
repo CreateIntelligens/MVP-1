@@ -55,7 +55,7 @@ class NexAvatar {
             // only production use nexretail2
             this.api = 'https://nexretail2.scsonic.com'; 
         } else {
-            this.api = 'https://nexretail.scsonic.com';
+            this.api = 'https://nexretail2.scsonic.com';
         }
 
 
