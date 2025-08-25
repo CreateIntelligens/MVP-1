@@ -55,12 +55,18 @@ class TTSService:
             
             logger.info(f"TTS: 開始生成語音，使用語音: {TTS_VOICES.get(self.voice, self.voice)}")
             
+            # 創建 EdgeTTS 通信對象
             communicate = edge_tts.Communicate(text, self.voice)
             audio_data = b""
             
+            # 收集音頻數據
             async for chunk in communicate.stream():
                 if chunk["type"] == "audio":
                     audio_data += chunk["data"]
+            
+            if len(audio_data) == 0:
+                logger.warning("TTS: EdgeTTS 返回空音頻數據")
+                return None
             
             if audio_data:
                 audio_base64 = base64.b64encode(audio_data).decode()
@@ -72,6 +78,7 @@ class TTSService:
                 
         except Exception as e:
             logger.error(f"TTS 錯誤: {e}")
+            # 即使出錯也不要拋出異常，返回 None 讓上層處理
             return None
     
     async def generate_audio_with_voice(self, text: str, voice: str) -> str:
