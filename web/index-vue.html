@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ pageTitle }}</title>
-    <!-- Tailwind CSS only -->
-    <link rel="stylesheet" href="css/style_v2.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="app">
-        <!-- 啟動介面 -->
+        <!-- Startup Screen Component -->
         <startup-cover 
             v-if="showStartup"
             :brand-config="brandConfig"
@@ -24,40 +23,16 @@
             @update-access-code="accessCode = $event"
         ></startup-cover>
 
-        <!-- 主應用 -->
+        <!-- Main Application Container -->
         <div class="container" id="main-app" v-show="!showStartup">
-            <!-- 標題區域 -->
+            <!-- Header Section -->
             <header class="header">
-                <div class="company-logo">
-                    <img :src="brandConfig.logo" :alt="brandConfig.logoAlt" />
-                </div>
                 <h1>{{ brandConfig.header.title }}</h1>
                 <button class="logout-button" @click="logout">登出</button>
             </header>
 
-            <!-- 控制區域 -->
+            <!-- Voice Settings Section -->
             <div class="controls-container">
-                <!-- 模式選擇區域 -->
-                <div class="mode-selector">
-                    <button 
-                        id="mode-nexavatar" 
-                        class="mode-btn"
-                        :class="{ 'active': currentMode === 'nexavatar' }"
-                        @click="switchMode('nexavatar')"
-                    >
-                        NexAvatar (TTS+動畫) + LLM
-                    </button>
-                    <button 
-                        id="mode-mytts" 
-                        class="mode-btn"
-                        :class="{ 'active': currentMode === 'mytts' }"
-                        @click="switchMode('mytts')"
-                    >
-                        NexAvatar (動畫) + TTS + LLM
-                    </button>
-                </div>
-
-                <!-- 語音設定區域 -->
                 <div class="voice-settings">
                     <div class="voice-selector">
                         <label for="voice-select">語音選擇：</label>
@@ -72,21 +47,20 @@
                 </div>
             </div>
 
-            <!-- 主要內容區域 -->
+            <!-- Main Content Area -->
             <div class="main-content">
-                <!-- 虛擬人物容器 -->
+                <!-- Avatar Container -->
                 <div id="avatar-container" class="avatar-container">
-                    
-                    <!-- <div class="loading-text">
-                        <p>虛擬助理載入中...</p>
-                    </div> -->
-                    <!-- <canvas width="540" height="489"></canvas> -->
+                    <!-- Company Logo -->
+                    <div class="company-logo">
+                        <img :src="brandConfig.logo" :alt="brandConfig.logoAlt" />
+                    </div>
                 </div>
 
-                <!-- 對話區域 -->
+                <!-- Chat Container -->
                 <div class="chat-container">
                     <div id="conversation" class="conversation">
-                        <!-- 訊息列表 -->
+                        <!-- Message List -->
                         <div 
                             v-for="(message, index) in messages" 
                             :key="index"
@@ -101,14 +75,13 @@
                         </div>
                     </div>
 
-                    <!-- 快速問題卡片 -->
+                    <!-- Quick Question Cards -->
                     <div class="quick-questions" v-if="quickQuestions.length > 0">
-                        <div class="quick-questions-title">快速問題：</div>
                         <div class="question-cards">
                             <button 
                                 v-for="question in quickQuestions" 
                                 :key="question"
-                                class="question-card"
+                                class="question-card" 
                                 @click="handleSelectQuestion(question)"
                             >
                                 {{ question }}
@@ -116,7 +89,7 @@
                         </div>
                     </div>
 
-                    <!-- 輸入區域 -->
+                    <!-- Input Section -->
                     <div class="input-section">
                         <div class="input-container">
                             <input 
@@ -130,11 +103,13 @@
                                 id="send-btn"
                                 @click="sendMessage"
                                 :disabled="isProcessing"
+                                :style="{ opacity: isProcessing ? '0.7' : '1' }"
                             >
                                 發送
                             </button>
                         </div>
-                        <!-- 狀態顯示 -->
+                        
+                        <!-- Status Display -->
                         <div id="status" class="status" :class="statusType">{{ statusMessage }}</div>
                     </div>
                 </div>
@@ -142,7 +117,7 @@
         </div>
     </div>
 
-    <!-- JavaScript -->
+    <!-- External Scripts -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="js/brands.js"></script>
     <script src="js/nexavatar_v1.7.js"></script>

@@ -1,28 +1,31 @@
-FROM python:3.11-slim
+FROM python:3.9-slim
 
-# 設置工作目錄
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
 WORKDIR /app
 
-# 複製依賴文件
+# Copy requirements file
 COPY requirements.txt .
 
-# 安裝系統依賴和 Python 依賴
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 複製應用程式代碼
-COPY . .
+# Application code is mounted via volume, no copying needed
 
-# 設置環境變數
+# Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-# 暴露端口
+# Expose ports
 EXPOSE 8000 3000
 
-# 健康檢查 (使用 wget instead of curl)
+# Health check configuration
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')" || exit 1
+    CMD curl -f http://localhost:8000/api/health || exit 1
 
-# 預設運行 API 服務
+# Default command to run API server
 CMD ["python", "backend/api_server.py"]
