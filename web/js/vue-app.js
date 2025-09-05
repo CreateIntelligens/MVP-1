@@ -1,10 +1,14 @@
 /**
- * Vue.js 多品牌 AI 虛擬助理應用
+ * Multi-Brand AI Virtual Assistant Application
+ * Built with Vue.js 3
  */
 
 const { createApp } = Vue;
 
-// 啟動介面組件
+/**
+ * Startup Screen Component
+ * Handles user authentication and brand initialization
+ */
 const StartupCover = {
     props: ['brandConfig', 'countdown', 'accessCode', 'loginError', 'isLoggingIn', 'isLoggedIn', 'requireAuth'],
     emits: ['start-app', 'login', 'update-access-code'],
@@ -126,7 +130,10 @@ const StartupCover = {
     }
 };
 
-// 虛擬人容器組件
+/**
+ * Avatar Container Component
+ * Renders the virtual avatar and company logo
+ */
 const AvatarContainer = {
     props: ['brandConfig', 'isAvatarReady'],
     template: `
@@ -139,7 +146,10 @@ const AvatarContainer = {
     `
 };
 
-// 對話容器組件
+/**
+ * Chat Container Component
+ * Manages conversation interface and user interactions
+ */
 const ChatContainer = {
     props: ['brandConfig', 'messages', 'isProcessing', 'quickQuestions'],
     emits: ['send-message', 'select-question'],
@@ -214,7 +224,10 @@ const ChatContainer = {
     }
 };
 
-// 主應用
+/**
+ * Main Application
+ * Vue.js application instance with all core functionality
+ */
 const app = createApp({
     components: {
         StartupCover,
@@ -223,14 +236,14 @@ const app = createApp({
     },
     data() {
         return {
-            // 認證相關
+            // Authentication state
             isLoggedIn: false,
             sessionId: null,
             accessCode: '',
             loginError: '',
             isLoggingIn: false,
             
-            // 品牌相關
+            // Brand configuration
             currentBrand: 'creative_tech',
             brandConfig: {
                 title: '載入中...',
@@ -243,31 +256,31 @@ const app = createApp({
                 logoAlt: '載入中...'
             },
             
-            // UI 狀態
+            // UI state management
             showStartup: true,
             countdown: 3,
             
-            // 對話相關
+            // Chat functionality
             messages: [],
             quickQuestions: [],
             isProcessing: false,
             userInput: '',
             
-            // 語音和模式
+            // Voice and mode settings
             currentMode: 'mytts',
             selectedVoice: 'zh-TW-HsiaoChenNeural',
             
-            // NexAvatar
+            // NexAvatar integration
             avatar: null,
             isAvatarReady: false,
             hasUserInteracted: false,
             pendingWelcomeMessage: false,
             
-            // 狀態顯示
+            // Status display
             statusMessage: 'System initializing...',
             statusType: 'info',
             
-            // API 配置
+            // API configuration
             API_BASE_URL: window.location.origin
         };
     },
@@ -280,7 +293,10 @@ const app = createApp({
         this.initApp();
     },
     methods: {
-        // 初始化應用
+        /**
+         * Initialize application
+         * Sets up brand configuration, countdown, and question cards
+         */
         async initApp() {
             console.log('Vue 應用初始化開始');
             
@@ -296,7 +312,10 @@ const app = createApp({
             console.log('Vue 應用初始化完成');
         },
         
-        // 載入品牌配置
+        /**
+         * Load brand configuration
+         * Determines brand from URL and applies appropriate settings
+         */
         loadBrandConfig() {
             try {
                 console.log('開始載入品牌配置...');
@@ -376,7 +395,10 @@ const app = createApp({
             }
         },
         
-        // 開始倒數計時
+        /**
+         * Start countdown timer
+         * Countdown before allowing user to start application
+         */
         startCountdown() {
             const timer = setInterval(() => {
                 if (this.countdown > 0) {
@@ -387,7 +409,10 @@ const app = createApp({
             }, 1000);
         },
         
-        // 啟動應用
+        /**
+         * Start application
+         * Transitions from startup screen to main interface
+         */
         startApp() {
             console.log('用戶啟動應用');
             this.hasUserInteracted = true;
@@ -404,7 +429,10 @@ const app = createApp({
             });
         },
         
-        // 初始化 NexAvatar
+        /**
+         * Initialize NexAvatar
+         * Sets up virtual avatar with event handlers
+         */
         initNexAvatar() {
             console.log('開始初始化 NexAvatar');
             
@@ -500,7 +528,10 @@ const app = createApp({
             });
         },
         
-        // 載入問題卡片
+        /**
+         * Load question cards
+         * Fetches brand-specific quick questions from API
+         */
         async loadQuestionCards() {
             try {
                 console.log('載入品牌問題卡片:', this.currentBrand);
@@ -522,13 +553,19 @@ const app = createApp({
             }
         },
         
-        // 顯示歡迎訊息
+        /**
+         * Show welcome message
+         * Displays brand welcome message in chat
+         */
         showWelcomeMessage() {
             const welcomeText = this.brandConfig.welcomeMessage;
             this.addMessage(welcomeText, 'bot');
         },
         
-        // 播放歡迎訊息
+        /**
+         * Play welcome message
+         * Uses voice synthesis to speak welcome message
+         */
         async playWelcomeMessage() {
             const welcomeText = this.brandConfig.welcomeMessage;
             
@@ -541,7 +578,10 @@ const app = createApp({
             }
         },
         
-        // 處理發送訊息
+        /**
+         * Handle send message
+         * Processes user input and generates AI response
+         */
         async handleSendMessage(message) {
             console.log('處理發送訊息:', message);
             
@@ -575,13 +615,19 @@ const app = createApp({
             }
         },
         
-        // 處理選擇問題
+        /**
+         * Handle question selection
+         * Processes quick question selection
+         */
         handleSelectQuestion(question) {
             console.log('選擇問題:', question);
             this.handleSendMessage(question);
         },
         
-        // 登入功能
+        /**
+         * Handle user login
+         * Validates access code and creates session
+         */
         async handleLogin() {
             if (!this.accessCode.trim()) {
                 this.loginError = '請輸入存取序號';
@@ -628,7 +674,10 @@ const app = createApp({
             }
         },
         
-        // 登出功能
+        /**
+         * User logout
+         * Clears session and returns to startup screen
+         */
         logout() {
             this.isLoggedIn = false;
             this.sessionId = null;
@@ -638,7 +687,10 @@ const app = createApp({
             this.updateStatus('已登出', 'info');
         },
 
-        // 獲取 LLM 回應
+        /**
+         * Get LLM response
+         * Sends message to AI service and returns response
+         */
         async getLLMResponse(message) {
             try {
                 const response = await fetch(`${this.API_BASE_URL}/api/chat`, {
@@ -678,7 +730,10 @@ const app = createApp({
             }
         },
         
-        // 處理語音回應
+        /**
+         * Handle voice response
+         * Processes text-to-speech based on current mode
+         */
         async handleVoiceResponse(text) {
             try {
                 if (this.currentMode === 'nexavatar') {
@@ -693,7 +748,10 @@ const app = createApp({
             }
         },
         
-        // NexAvatar 說話
+        /**
+         * NexAvatar speech
+         * Uses NexAvatar's built-in TTS and animation
+         */
         async handleNexAvatarSpeak(text) {
             if (!this.isAvatarReady || !this.avatar) {
                 this.updateStatus('虛擬助理未準備就緒', 'error');
@@ -719,7 +777,10 @@ const app = createApp({
             }
         },
         
-        // 我的 TTS 說話
+        /**
+         * Custom TTS speech
+         * Uses custom TTS service with NexAvatar animation
+         */
         async handleMyTTSSpeak(text) {
             if (!this.isAvatarReady || !this.avatar) {
                 this.updateStatus('虛擬助理未準備就緒', 'error');
@@ -768,7 +829,10 @@ const app = createApp({
             }
         },
         
-        // 選擇 rangeId
+        /**
+         * Select animation range ID
+         * Determines appropriate animation based on content
+         */
         selectRangeId(text) {
             const numbers = [0, 18, 19];
             const randomIndex = Math.floor(Math.random() * numbers.length);
@@ -785,7 +849,10 @@ const app = createApp({
             return rangeId;
         },
         
-        // 強制停止當前語音
+        /**
+         * Force stop current speech
+         * Interrupts ongoing voice playback
+         */
         forceStopCurrentSpeech() {
             console.log('強制停止當前語音');
             
@@ -812,30 +879,20 @@ const app = createApp({
             }
         },
         
-        // 切換模式
-        switchMode(mode) {
-            if (this.isProcessing) {
-                this.updateStatus('請等待當前操作完成', 'error');
-                return;
-            }
-            
-            this.currentMode = mode;
-            console.log(`切換到模式: ${mode}`);
-            
-            if (mode === 'nexavatar') {
-                this.updateStatus('NexAvatar (TTS+動畫) + LLM', 'info');
-            } else if (mode === 'mytts') {
-                this.updateStatus('NexAvatar (動畫) + TTS + LLM', 'info');
-            }
-        },
         
-        // 語音變更
+        /**
+         * Voice change handler
+         * Updates selected voice for TTS
+         */
         onVoiceChange() {
             console.log(`語音已切換為: ${this.selectedVoice}`);
             this.updateStatus(`語音已切換`, 'success');
         },
         
-        // 添加訊息
+        /**
+         * Add message to chat
+         * Adds message and scrolls to bottom
+         */
         addMessage(text, type) {
             this.messages.push({
                 text: text,
@@ -851,7 +908,10 @@ const app = createApp({
             });
         },
         
-        // 添加載入訊息
+        /**
+         * Add loading message
+         * Shows loading indicator in chat
+         */
         addLoadingMessage() {
             const message = {
                 text: '',
@@ -871,7 +931,10 @@ const app = createApp({
             return message;
         },
         
-        // 更新載入訊息
+        /**
+         * Update loading message
+         * Replaces loading indicator with actual content
+         */
         updateLoadingMessage(loadingMessage, text) {
             loadingMessage.text = text;
             loadingMessage.isLoading = false;
@@ -884,14 +947,20 @@ const app = createApp({
             });
         },
         
-        // 更新狀態
+        /**
+         * Update status display
+         * Shows status message to user
+         */
         updateStatus(message, type = 'info') {
             this.statusMessage = message;
             this.statusType = type;
             console.log(`狀態: ${message}`);
         },
         
-        // 發送訊息（主應用中的方法）
+        /**
+         * Send message (main app method)
+         * Wrapper for handleSendMessage with input clearing
+         */
         sendMessage() {
             if (this.userInput.trim()) {
                 this.handleSendMessage(this.userInput.trim());
@@ -901,7 +970,7 @@ const app = createApp({
     }
 });
 
-// 掛載應用
+// Mount the Vue application
 app.mount('#app');
 
-console.log('Vue 多品牌 AI 虛擬助理應用載入完成');
+console.log('Multi-Brand AI Virtual Assistant Application loaded successfully');
